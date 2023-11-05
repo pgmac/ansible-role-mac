@@ -1,0 +1,18 @@
+galaxy_info:
+  author: Paul Macdonnell
+  description: Manage your Mac environment
+
+  license: BSD-3-Clause
+
+  min_ansible_version: 2.1
+
+  platforms:
+    - name: macOS
+      versions:
+      - all
+
+  galaxy_tags:
+    - macos
+    - homebrew
+
+dependencies: []

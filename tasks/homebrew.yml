@@ -1,0 +1,160 @@
+---
+
+- name: Get the homebrew prefix
+  command: brew --prefix
+  register: brew_prefix
+  check_mode: no
+  tags:
+    - homebrew
+    - install
+    - formula
+    - cask
+    - xattrs
+    - shells
+  when: ansible_distribution == 'MacOSX'
+
+
+- name: Set my home directory as a fact
+  ansible.builtin.set_fact:
+    userhome: "{{ lookup('env','HOME') }}"
+
+
+- name: Show me the Homebrew prefix
+  debug:
+    msg: "{{ brew_prefix.stdout }} - {{ user_shell }}"
+  check_mode: no
+  tags:
+    - homebrew
+    - install
+
+
+- name: Install homebrew
+  become: false
+  command: 
+    cmd: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    creates: "{{ brew_prefix.stdout }}/bin/brew"
+  tags:
+    - homebrew
+    - install
+  when:
+    - ansible_distribution == 'MacOSX'
+
+
+- name: Unlink md5sha1sum
+  become: false
+  community.general.packaging.os.homebrew:
+    name: "md5sha1sum"
+    state: unlinked
+  tags:
+    - homebrew
+    - install
+    - unlink
+  when:
+    - ansible_distribution == 'MacOSX'
+    - (["coreutils"] is subset(homebrew.formula))
+
+
+- name: Installing MacOS homebrew formula
+  become: false
+  community.general.packaging.os.homebrew:
+    name: "{{ homebrew.formula }}"
+    state: present
+  tags:
+    - homebrew
+    - install
+    - formula
+  when: ansible_distribution == 'MacOSX'
+
+
+- name: Installing MacOS homebrew casks
+  become: false
+  community.general.packaging.os.homebrew_cask:
+    name: "{{ homebrew.casks }}"
+    state: present
+  tags:
+    - homebrew
+    - install
+    - cask
+  when: ansible_distribution == 'MacOSX'
+
+
+- name: Install oh-my-zsh
+  command:
+    cmd: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    creates: "{{ userhome }}/.oh-my-zsh"
+  tags:
+    - shells
+    - install
+
+
+- name: Update my homebrew forumlas
+  become: false
+  community.general.packaging.os.homebrew:
+    update_homebrew: true
+    upgrade_all: true
+  tags:
+    - homebrew
+    - update
+    - formula
+  when:
+    - ansible_distribution == 'MacOSX'
+
+
+- name: Update my homebrew casks
+  become: false
+  community.general.packaging.os.homebrew_cask:
+    update_homebrew: true
+    upgrade_all: true
+  tags:
+    - homebrew
+    - update
+    - cask
+  when:
+    - ansible_distribution == 'MacOSX'
+
+
+- name: Allow execution of uncheckable executables
+  include_tasks: tasks/homebrew-xattrs.yml
+  loop:
+    - "{{ brew_prefix.stdout }}/bin/rar"
+    - "{{ brew_prefix.stdout }}/bin/unrar"
+  tags:
+    - homebrew
+    - install
+    - formula
+    - cask
+    - xattr
+  when:
+    - ansible_distribution == 'MacOSX'
+
+
+- name: Add bash to list of allowed shells
+  become: false
+  ansible.builtin.lineinfile:
+    state: present
+    insertafter: EOF
+    path: /etc/shells
+    search_string: "{{ brew_prefix.stdout }}/bin/bash"
+    line: "{{ brew_prefix.stdout | default('/usr/local') }}/bin/bash"
+  tags:
+    - homebrew
+    - install
+    - formula
+    - shells
+  when:
+    - ansible_distribution == 'MacOSX'
+    - (["bash"] is subset(homebrew.formula))
+
+
+- name: Set my default shell to bash
+  become: false
+  command: "chsh -s {{ brew_prefix.stdout }}/bin/bash"
+  tags:
+    - homebrew
+    - install
+    - formula
+    - shells
+  when:
+    - ansible_distribution == 'MacOSX'
+    - (["bash"] is subset(homebrew.formula))
+    - user_shell == 'bash'

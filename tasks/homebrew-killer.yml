@@ -1,0 +1,49 @@
+---
+
+# Remove all my stuff from my Mac
+
+- name: Homebrew killer - shell reset
+  command: chsh -s /bin/bash
+  become: false
+  tags:
+    - homebrew
+    - killer
+  when:
+    - ansible_distribution == 'MacOSX'
+    - kill_my_mac == true
+
+
+- name: Homebrew killer - uninstall all the formula apps
+  command: "{{ brew_prefix.stdout }}/bin/brew remove --force $(brew list --formula)"
+  become: false
+  tags:
+    - homebrew
+    - killer
+  when:
+    - ansible_distribution == 'MacOSX'
+    - kill_my_mac == true
+
+
+- name: Homebrew killer - uninstall all the cask apps
+  command: "{{ brew_prefix.stdout }}/bin/brew remove --cask --force $(brew list)"
+  become: false
+  tags:
+    - homebrew
+    - killer
+  when:
+    - ansible_distribution == 'MacOSX'
+    - kill_my_mac == true
+
+
+- name: Homebrew killer - uninstall homebrew
+  command: 
+    cmd: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"
+    removes: "{{ brew_prefix.stdout }}/bin/brew"
+  become: false
+  tags:
+    - homebrew
+    - killer
+  when:
+    - ansible_distribution == 'MacOSX'
+    - kill_my_mac == true
+

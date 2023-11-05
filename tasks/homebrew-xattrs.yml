@@ -1,0 +1,26 @@
+---
+
+- name: "Is {{ item }} quarantined by xattr?"
+  command: "xattr -p com.apple.quarantine {{ item }}"
+  register: quarantined
+  failed_when: quarantined.rc > 1
+  tags:
+    - homebrew
+    - install
+    - formula
+    - cask
+    - xattr
+  when:
+    - ansible_distribution == 'MacOSX'
+
+- name: "Remove quarantine xattr from {{ item }}"
+  command: "xattr -p com.apple.quarantine {{ item }}"
+  when: 
+    - ansible_distribution == 'MacOSX'
+    - quarantined.rc == 0
+  tags:
+    - homebrew
+    - install
+    - formula
+    - cask
+    - xattr
