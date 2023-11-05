@@ -19,16 +19,22 @@ Role Variables
 Dependencies
 ------------
 
-ansible-role-dotfiles
-
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Installing some base/common stuff and setting your shell to 'zsh'
 
     - hosts: localhost
       roles:
          - { role: ansibole-role-mac, user_shell: zsh }
+
+
+Killing everything you have on your Mac
+
+    - hosts: localhost
+      roles:
+         - { role: ansibole-role-mac, user_shell: zsh, kill_my_mac: true }
+
 
 License
 -------
